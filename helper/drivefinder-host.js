@@ -97,27 +97,74 @@ function openWith(args) {
   return task.terminationStatus;
 }
 
-function handle(msg) {
-  if (!msg || !Array.isArray(msg.segments) || !msg.segments.length) {
-    return { ok: false, error: 'Nothing to open.' };
+function findChild(dir, name) {
+  var opts = variants(String(name));
+  for (var j = 0; j < opts.length; j++) {
+    if (exists(dir + '/' + opts[j])) return opts[j];
   }
-  var cur = findDriveRoot(msg.email);
-  var matched = 0;
-  for (var i = 0; i < msg.segments.length; i++) {
-    var opts = variants(String(msg.segments[i])), hit = null;
-    for (var j = 0; j < opts.length; j++) {
-      if (exists(cur + '/' + opts[j])) { hit = opts[j]; break; }
+  return null;
+}
+
+// How many of the path pieces exist, in order, under dir.
+function depthUnder(dir, segments, limit) {
+  var cur = dir, n = 0;
+  for (var i = 0; i < segments.length && i < limit; i++) {
+    var hit = findChild(cur, segments[i]);
+    if (!hit) break;
+    cur = cur + '/' + hit;
+    n++;
+  }
+  return n;
+}
+
+// Pick the shared drive folder: by name if Chrome knew it, otherwise the one that holds the path.
+function pickSharedDrive(sharedDir, hint, segments) {
+  if (hint) {
+    var named = findChild(sharedDir, hint);
+    if (named) return named;
+  }
+  if (!segments.length) return null;
+  var best = null, bestScore = 0, drives = listDir(sharedDir);
+  for (var i = 0; i < drives.length; i++) {
+    var score = depthUnder(sharedDir + '/' + drives[i], segments, 4);
+    if (score > bestScore) { best = drives[i]; bestScore = score; }
+  }
+  return best;
+}
+
+function handle(msg) {
+  if (!msg || !Array.isArray(msg.segments)) return { ok: false, error: 'Nothing to open.' };
+  var root = findDriveRoot(msg.email);
+  var segments = msg.segments.map(String);
+  var cur;
+
+  if (msg.sharedDrive) {
+    var sharedDir = root + '/Shared drives';
+    if (!exists(sharedDir)) return { ok: false, error: 'Couldn’t find Shared drives in Drive for desktop on this Mac.' };
+    var drive = pickSharedDrive(sharedDir, msg.driveNameHint, segments);
+    if (!drive) {
+      openWith([sharedDir]);
+      return { ok: true, exact: false, path: sharedDir };
     }
+    cur = sharedDir + '/' + drive;
+  } else {
+    if (!segments.length) return { ok: false, error: 'Nothing to open.' };
+    cur = root;
+  }
+
+  var matched = 0;
+  for (var i = 0; i < segments.length; i++) {
+    var hit = findChild(cur, segments[i]);
     if (!hit) break;
     cur = cur + '/' + hit;
     matched++;
   }
 
-  if (matched === 0) {
-    return { ok: false, error: 'Couldn’t find “' + msg.segments[0] + '” in Drive for desktop on this Mac.' };
+  if (!msg.sharedDrive && matched === 0) {
+    return { ok: false, error: 'Couldn’t find “' + segments[0] + '” in Drive for desktop on this Mac.' };
   }
 
-  var exact = matched === msg.segments.length;
+  var exact = matched === segments.length;
   // Exact folder -> open it. Exact file -> reveal it. Partial -> open the deepest folder we found.
   var status = (exact && !msg.isFolder) ? openWith(['-R', cur]) : openWith([cur]);
   if (status !== 0) return { ok: false, error: 'Finder couldn’t open ' + cur };

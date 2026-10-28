@@ -1,0 +1,4 @@
+# Never commit the signing key: whoever has it can publish updates to this extension.
+keys/*.pem
+dist/
+.DS_Store

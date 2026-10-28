@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>PayloadContent</key>
+  <array>
+    <dict>
+      <key>PayloadType</key>
+      <string>com.google.Chrome</string>
+      <key>PayloadIdentifier</key>
+      <string>com.apparent.drivefinder.chrome.80E23509-E11B-48A7-A85A-440C2E4FB01E</string>
+      <key>PayloadUUID</key>
+      <string>80E23509-E11B-48A7-A85A-440C2E4FB01E</string>
+      <key>PayloadVersion</key>
+      <integer>1</integer>
+      <key>PayloadDisplayName</key>
+      <string>Drive to Finder (Chrome)</string>
+      <key>ExtensionSettings</key>
+      <dict>
+        <key>pikhmpompojbkhbckmgolnbmnakaakbe</key>
+        <dict>
+          <key>installation_mode</key>
+          <string>force_installed</string>
+          <key>update_url</key>
+          <string>__UPDATE_URL__</string>
+          <key>toolbar_pin</key>
+          <string>force_pinned</string>
+        </dict>
+      </dict>
+    </dict>
+  </array>
+  <key>PayloadDisplayName</key>
+  <string>Drive to Finder</string>
+  <key>PayloadDescription</key>
+  <string>Installs and pins the Drive to Finder extension in Google Chrome.</string>
+  <key>PayloadIdentifier</key>
+  <string>com.apparent.drivefinder.515F6072-25F6-4376-8012-0528C50F156E</string>
+  <key>PayloadOrganization</key>
+  <string>Apparent</string>
+  <key>PayloadScope</key>
+  <string>System</string>
+  <key>PayloadType</key>
+  <string>Configuration</string>
+  <key>PayloadUUID</key>
+  <string>515F6072-25F6-4376-8012-0528C50F156E</string>
+  <key>PayloadVersion</key>
+  <integer>1</integer>
+</dict>
+</plist>

@@ -1,0 +1,9 @@
+{
+  "name": "com.apparent.drivefinder",
+  "description": "Drive to Finder helper",
+  "path": "/Library/Application Support/Apparent/DriveFinder/drivefinder-host",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://pikhmpompojbkhbckmgolnbmnakaakbe/"
+  ]
+}

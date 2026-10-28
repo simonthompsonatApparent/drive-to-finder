@@ -69,11 +69,7 @@ async function run(tab, explicitUrl) {
 
     notify(tabId, 'Finding it in Finder…', 'info');
     const resolved = await resolve(target.id);
-    const reply = await askHelper({
-      email: resolved.email,
-      segments: resolved.segments,
-      isFolder: resolved.isFolder
-    });
+    const reply = await askHelper(resolved);
 
     if (!reply || !reply.ok) {
       return notify(tabId, (reply && reply.error) || 'Something went wrong opening Finder.', 'error');
@@ -196,8 +192,15 @@ function getFile(id) {
   });
 }
 
-function getDrive(id) {
-  return api('/drives/' + encodeURIComponent(id), { fields: 'id,name' });
+// Shared drive names come from files.get on the drive's ID where Google allows it
+// (drives.get would need a broader scope). If it doesn't, the helper works the drive out on the Mac.
+async function sharedDriveNameHint(driveId) {
+  try { return (await getFile(driveId)).name || null; } catch (e) { return null; }
+}
+
+// Shared drive IDs are short and start with 0A; regular file IDs are longer.
+function looksLikeSharedDriveId(id) {
+  return /^0A[\w-]{15,20}$/.test(id);
 }
 
 function localName(file) {
@@ -214,43 +217,43 @@ async function resolve(id) {
   const ctx = await context();
   const base = { email: ctx.email };
 
-  if (id === 'root' || id === ctx.rootId) return { ...base, segments: ['My Drive'], isFolder: true };
+  if (id === 'root' || id === ctx.rootId) {
+    return { ...base, sharedDrive: false, segments: ['My Drive'], isFolder: true };
+  }
 
   let file;
   try {
     file = await getFile(id);
   } catch (e) {
-    // A shared drive's own ID isn't always readable as a file — try it as a drive.
-    if (e.status === 404) {
-      try {
-        const d = await getDrive(id);
-        return { ...base, segments: ['Shared drives', d.name], isFolder: true };
-      } catch (_) { /* fall through */ }
+    // The top level of a shared drive isn't always readable as a file; let the helper find it.
+    if ((e.status === 404 || e.status === 403) && looksLikeSharedDriveId(id)) {
+      return { ...base, sharedDrive: true, driveNameHint: null, segments: [], isFolder: true };
     }
     throw fail(e.status === 404 || e.status === 403 ? MSG.noAccess : e.message);
   }
 
   if (file.driveId && file.id === file.driveId) {
-    const d = await getDrive(file.driveId);
-    return { ...base, segments: ['Shared drives', d.name], isFolder: true };
+    return { ...base, sharedDrive: true, driveNameHint: file.name || null, segments: [], isFolder: true };
   }
 
+  const isFolder = file.mimeType === FOLDER;
   const segments = [localName(file)];
   let cur = file;
   for (let depth = 0; depth < 100; depth++) {
     const parent = cur.parents && cur.parents[0];
     if (!parent) throw fail(MSG.notSynced);
-    if (parent === ctx.rootId) { segments.unshift('My Drive'); break; }
+    if (parent === ctx.rootId) {
+      segments.unshift('My Drive');
+      return { ...base, sharedDrive: false, segments, isFolder };
+    }
     if (cur.driveId && parent === cur.driveId) {
-      const d = await getDrive(parent);
-      segments.unshift('Shared drives', d.name);
-      break;
+      // segments are the path below the shared drive's top level.
+      return { ...base, sharedDrive: true, driveNameHint: await sharedDriveNameHint(parent), segments, isFolder };
     }
     try { cur = await getFile(parent); } catch (e) { throw fail(MSG.notSynced); }
     segments.unshift(cur.name);
   }
-
-  return { ...base, segments, isFolder: file.mimeType === FOLDER };
+  throw fail(MSG.notSynced);
 }
 
 // ---------- Mac helper ----------

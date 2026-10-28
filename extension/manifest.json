@@ -1,0 +1,50 @@
+{
+  "manifest_version": 3,
+  "name": "Drive to Finder",
+  "version": "1.0.0",
+  "description": "Show any Google Drive file or folder in Finder, using Google Drive for desktop.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyC5OBENaIDvt/+AMwh0ezfTqUkYVOJ8mfAQ9/KYBI8NZEBlpeE3zy1NIFVNn+B/7LwkgH9enIDvRt6OhzwNEW+pdgIYEOVvAydr6B+eLf6exxd5TUi3sL4YKoIX7uXlIgAk7Wu4dO85A0Wql61Lq4qsnBox4vMAomPLhhlG/01eVUW5I1oqPvzfyrfbb1LaxvreXD6Tq75DerbaxRTleACVhqxayoQlpZgacLqiSVfbAzUZMEUm89DDM2pf+TO8WLzx8LUp1uBHqk3UObcjpBAG6azqSaaWOvCGZMaa3Q59U61ayL4Gx3Z1imq5PG3kJ6FBEiVmkz61w6Fg7UjnrlwIDAQAB",
+  "permissions": [
+    "identity",
+    "nativeMessaging",
+    "contextMenus",
+    "scripting",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://drive.google.com/*",
+    "https://docs.google.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Show in Finder",
+    "default_icon": {
+      "16": "icons/16.png",
+      "32": "icons/32.png",
+      "48": "icons/48.png"
+    }
+  },
+  "icons": {
+    "16": "icons/16.png",
+    "32": "icons/32.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  },
+  "commands": {
+    "show-in-finder": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+F",
+        "mac": "MacCtrl+Shift+F"
+      },
+      "description": "Show the current Drive item in Finder"
+    }
+  },
+  "oauth2": {
+    "client_id": "REPLACE_WITH_OAUTH_CLIENT_ID.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/drive.metadata.readonly"
+    ]
+  }
+}
